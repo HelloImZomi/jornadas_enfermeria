@@ -27,12 +27,12 @@ use Ramsey\Uuid\Uuid;
 Route::get('/', RegisterForm::class);
 Route::get('/registro/{code}', function ($code) {
     if (Uuid::isValid($code)) {
-        $inscription = Inscription::where('code', $code)->get();
+        $inscription = Inscription::where('code', $code)->with(['convocation', 'school'])->first();
     } else {
         return 'No se han encontrado registros';
     }
 
-    return 'Registro ' . $inscription;
+    return view('inscription', compact('inscription'));
 });
 
 Route::prefix('/')
