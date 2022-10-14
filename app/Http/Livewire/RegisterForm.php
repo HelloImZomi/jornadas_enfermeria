@@ -2,6 +2,7 @@
 
 namespace App\Http\Livewire;
 
+use App\Mail\UserRegistered;
 use App\Models\Convocation;
 use App\Models\Inscription;
 use App\Models\School;
@@ -13,6 +14,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\In;
 use Livewire\Component;
@@ -70,14 +72,13 @@ class RegisterForm extends Component
         // Reduce the available spaces
         if ($this->inscription->modality == 1) {
             $convocation->presencial_limit -= 1;
-        } elseif ($this->inscription->modality == 2)
-        {
+        } elseif ($this->inscription->modality == 2) {
             $convocation->virtual_limit -= 1;
         }
         $convocation->save();
 
-        $uuid = Str::uuid();
-        $this->inscription->code = $uuid;
+        $code = Str::uuid();
+        $this->inscription->code = $code;
         $this->inscription->save();
 
         Notification::make()
@@ -85,6 +86,13 @@ class RegisterForm extends Component
             ->success()
             ->send();
 
+        $details = [
+            'name' => $this->inscription->name,
+            'convocation_title' => $convocation->name,
+            'url' => 'https://jornadaenfermeria.unav.edu.mx/registro/' . $code
+        ];
+
+        Mail::to("aromero@unav.edu.mx")->send(new UserRegistered($details));
 
         //return redirect()->to('/registrarse');
     }
